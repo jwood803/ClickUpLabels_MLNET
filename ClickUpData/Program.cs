@@ -10,7 +10,7 @@ namespace ClickUpData
 {
     class Program
     {
-        static async Task Main(string[] args)
+        static async System.Threading.Tasks.Task Main(string[] args)
         {
             var apiKey = Environment.GetEnvironmentVariable("CLICKUP_API_KEY", EnvironmentVariableTarget.User);
 
@@ -30,9 +30,27 @@ namespace ClickUpData
 
             var spacesCall = await client.GetAsync($"team/{team.Id}/space");
 
-            var spacesContent = spacesCall.Content.ReadAsStringAsync();
+            var spacesContent = await spacesCall.Content.ReadAsStringAsync();
 
-            var spaces = JsonSerializer
+            var spaces = JsonSerializer.Deserialize<Spaces>(spacesContent);
+
+            var space = spaces.SpacesList.Where(s => s.Name.Contains("Jon")).First();
+
+            var foldersCall = await client.GetAsync($"space/{space.Id}/folder");
+
+            var foldersContent = await foldersCall.Content.ReadAsStringAsync();
+
+            var folders = JsonSerializer.Deserialize<Folders>(foldersContent);
+
+            var folder = folders.FoldersList.Where(f => f.Name.Contains("Personal")).First();
+
+            var list = folder.Lists.Where(l => l.Name == "YouTube").First();
+
+            var tasksCall = await client.GetAsync($"list/{list.Id}/task?archived=false&include_closed=true");
+
+            var taskContent = await tasksCall.Content.ReadAsStringAsync();
+
+            var tasks = JsonSerializer.Deserialize<Tasks>(taskContent);
         }
     }
 }

@@ -5,7 +5,7 @@ namespace ClickUpData.Models
 {
     public class Spaces
     {
-        [JsonPropertyName("teams")]
+        [JsonPropertyName("spaces")]
         public List<Space> SpacesList { get; set; }
     }
 }

@@ -6,5 +6,8 @@ namespace ClickUpData.Models
     {
         [JsonPropertyName("id")]
         public string Id { get; set; }
+
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
     }
 }
