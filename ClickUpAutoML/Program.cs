@@ -29,6 +29,8 @@ namespace ClickUpAutoML
             var best = result.BestRun.Model;
 
             var predictionEngine = context.Model.CreatePredictionEngine<TaskInput, TaskOutput>(best);
+
+            var prediction = predictionEngine.Predict(new TaskInput { TaskName = "Introduction to ML.NET" });
         }
     }
 }
