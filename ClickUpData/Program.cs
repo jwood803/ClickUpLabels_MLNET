@@ -60,11 +60,19 @@ namespace ClickUpData
                 Tags = String.Join(",", t.Tags.Select(t => t.Name).FirstOrDefault())
             });
 
-            using (var writer = new StreamWriter(csvPath))
-            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-            {
-                csv.WriteRecords(csvData);
-            }
+            //using (var writer = new StreamWriter(csvPath))
+            //using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            //{
+            //    csv.WriteRecords(csvData);
+            //}
+
+            //var content = @"{ ""endpoint"": ""https://clickupwebhook20200622222849.azurewebsites.net/clickup"", ""events"": [ ""taskCreated"" ] }";
+
+            //var content = new StringContent("{  \"endpoint\": \"https://localhost:44394/clickup\",  \"events\": [    \"taskCreated\" ]}", System.Text.Encoding.Default, "application/json");
+
+            var webhookCall = await client.GetAsync($"team/{team.Id}/webhook");
+
+            var webhookContent = await webhookCall.Content.ReadAsStringAsync();
         }
     }
 }
