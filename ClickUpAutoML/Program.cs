@@ -18,7 +18,7 @@ namespace ClickUpAutoML
 
             var settings = new MulticlassExperimentSettings
             {
-                MaxExperimentTimeInSeconds = 120,
+                MaxExperimentTimeInSeconds = 300,
                 OptimizingMetric = MulticlassClassificationMetric.LogLoss                
             };
 
@@ -26,11 +26,15 @@ namespace ClickUpAutoML
 
             var result = experiment.Execute(data, new ColumnInformation { LabelColumnName = "Tags" });
 
-            var best = result.BestRun.Model;
+            var bestModel = result.BestRun.Model;
 
-            var predictionEngine = context.Model.CreatePredictionEngine<TaskInput, TaskOutput>(best);
+            var predictionEngine = context.Model.CreatePredictionEngine<TaskInput, TaskOutput>(bestModel);
 
             var prediction = predictionEngine.Predict(new TaskInput { TaskName = "Introduction to ML.NET" });
+
+            Console.WriteLine($"Predicted label - {prediction.PredictedLabel}");
+
+            context.Model.Save(bestModel, data.Schema, "./clickup-model.zip");
         }
     }
 }
