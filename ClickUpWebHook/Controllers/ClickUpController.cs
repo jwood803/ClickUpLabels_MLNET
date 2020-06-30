@@ -48,20 +48,11 @@ namespace ClickUpWebHook.Controllers
 
             var prediction = _predictionEnginePool.Predict(new TaskInput { TaskName = task.Name });
 
-            var updatedTask = new ClickUpTask
-            {
-                Name = $"Updated {task.Name}",
-                Id = body.TaskId,
-                Tags = new[] { prediction.PredictedLabel }
-            };
-
-            var update = JsonSerializer.Serialize(updatedTask);
-
-            var response = await _client.PutAsync($"{body.TaskId}", new StringContent(update));
+            var response = await _client.PostAsync($"{body.TaskId}/tag/{prediction.PredictedLabel}", new StringContent(""));
 
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            _logger.LogInformation($"Update on task ID {body.TaskId} with request {update}. {responseContent}");
+            _logger.LogInformation($"Update on task ID {body.TaskId} with tag {prediction.PredictedLabel}. {responseContent}");
         }
 
         [HttpGet]
