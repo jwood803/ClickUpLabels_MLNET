@@ -6,6 +6,8 @@ using System.Text.Json;
 using System.IO;
 using CsvHelper;
 using System.Globalization;
+using Microsoft.Azure.Storage;
+using Microsoft.Azure.Storage.Blob;
 
 namespace ClickUpData
 {
@@ -15,10 +17,12 @@ namespace ClickUpData
         {
             var csvPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "tasks.csv");
             var apiKey = Environment.GetEnvironmentVariable("CLICKUP_API_KEY", EnvironmentVariableTarget.User);
+            var storageConnection = Environment.GetEnvironmentVariable("STORAGE_CONNECTION", EnvironmentVariableTarget.User);
 
-            var client = new HttpClient();
-
-            client.BaseAddress = new Uri("https://api.clickup.com/api/v2/");
+            var client = new HttpClient
+            {
+                BaseAddress = new Uri("https://api.clickup.com/api/v2/")
+            };
 
             client.DefaultRequestHeaders.Add("Authorization", apiKey);
 
@@ -44,9 +48,9 @@ namespace ClickUpData
 
             var folders = JsonSerializer.Deserialize<Folders>(foldersContent);
 
-            var folder = folders.FoldersList.Where(f => f.Name.Contains("Personal")).First();
+            var folder = folders.FoldersList.First(f => f.Name.Contains("Personal"));
 
-            var list = folder.Lists.Where(l => l.Name == "YouTube").First();
+            var list = folder.Lists.First(l => l.Name == "YouTube");
 
             var tasksCall = await client.GetAsync($"list/{list.Id}/task?archived=false&include_closed=true");
 
@@ -54,25 +58,26 @@ namespace ClickUpData
 
             var tasks = JsonSerializer.Deserialize<Tasks>(taskContent);
 
-            var csvData = tasks.TasksList.Select(t => new CsvData
+            var csvData = tasks.TasksList.Where(t => t.Tags.Count == 1).Select(t => new CsvData
             {
                 TaskName = t.Name,
                 Tags = String.Join(",", t.Tags.Select(t => t.Name).FirstOrDefault())
             });
 
-            //using (var writer = new StreamWriter(csvPath))
-            //using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-            //{
-            //    csv.WriteRecords(csvData);
-            //}
+            await using (var writer = new StreamWriter(csvPath))
+            await using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            {
+                await csv.WriteRecordsAsync(csvData);
+            }
 
-            //var content = @"{ ""endpoint"": ""https://clickupwebhook20200622222849.azurewebsites.net/clickup"", ""events"": [ ""taskCreated"" ] }";
+            var storage = CloudStorageAccount.Parse(storageConnection);
 
-            //var content = new StringContent("{  \"endpoint\": \"https://localhost:44394/clickup\",  \"events\": [    \"taskCreated\" ]}", System.Text.Encoding.Default, "application/json");
+            var storageClient = storage.CreateCloudBlobClient();
 
-            var webhookCall = await client.GetAsync($"team/{team.Id}/webhook");
+            var container = storageClient.GetContainerReference("clickup");
 
-            var webhookContent = await webhookCall.Content.ReadAsStringAsync();
+            var fileRef = container.GetBlockBlobReference("tasks.csv");
+            await fileRef.UploadFromFileAsync(csvPath);
         }
     }
 }

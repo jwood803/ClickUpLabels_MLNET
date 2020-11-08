@@ -2,7 +2,6 @@
 using Microsoft.ML.AutoML;
 using System;
 using System.IO;
-using Tensorflow.Keras.Engine;
 
 namespace ClickUpAutoML
 {
@@ -18,8 +17,8 @@ namespace ClickUpAutoML
 
             var settings = new MulticlassExperimentSettings
             {
-                MaxExperimentTimeInSeconds = 300,
-                OptimizingMetric = MulticlassClassificationMetric.LogLoss                
+                MaxExperimentTimeInSeconds = 600,
+                OptimizingMetric = MulticlassClassificationMetric.LogLoss
             };
 
             var experiment = context.Auto().CreateMulticlassClassificationExperiment(settings);

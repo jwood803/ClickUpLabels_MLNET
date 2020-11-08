@@ -1,15 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ML;
 
 namespace ClickUpWebHook
@@ -31,7 +24,7 @@ namespace ClickUpWebHook
             services.AddApplicationInsightsTelemetry();
 
             services.AddPredictionEnginePool<TaskInput, TaskOutput>()
-                .FromFile("./MLModel/clickup-model.zip", watchForChanges: false);
+                .FromUri("https://databricksdemostorage.blob.core.windows.net/models/clickup-model.zip");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

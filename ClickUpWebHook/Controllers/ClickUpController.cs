@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ML;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -35,7 +34,7 @@ namespace ClickUpWebHook.Controllers
         [HttpPost]
         public async Task Post([FromBody] WebHookResponse body)
         {
-            if (String.IsNullOrWhiteSpace(body.TaskId))
+            if (body == null || String.IsNullOrWhiteSpace(body.TaskId))
             {
                 return;
             }
@@ -48,11 +47,18 @@ namespace ClickUpWebHook.Controllers
 
             var prediction = _predictionEnginePool.Predict(new TaskInput { TaskName = task.Name });
 
-            var response = await _client.PostAsync($"{body.TaskId}/tag/{prediction.PredictedLabel}", new StringContent(""));
+            var maxPrediction = prediction.Score.Max();
 
-            var responseContent = await response.Content.ReadAsStringAsync();
+            if (maxPrediction > 0.75)
+            {
+                await _client.PostAsync($"{body.TaskId}/tag/{prediction.PredictedLabel}", new StringContent(""));
 
-            _logger.LogInformation($"Update on task ID {body.TaskId} with tag {prediction.PredictedLabel}. {responseContent}");
+                _logger.LogInformation($"Update on task ID {body.TaskId} with tag {prediction.PredictedLabel} and score {maxPrediction}");
+            }
+            else
+            {
+                _logger.LogInformation($"No update due to low score of {maxPrediction}");
+            }
         }
 
         [HttpGet]
